@@ -285,6 +285,35 @@ body {
     font-size: 1rem;
 }
 
+.benefits-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.benefit-item {
+    flex: 0 1 calc(50% - 10px);
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    margin: 0;
+}
+
+.benefit-item i {
+    color: #3498db;
+    margin-right: 10px;
+    font-size: 16px;
+}
+
+.benefit-text {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    white-space: nowrap;
+}
+
 /* 首页介绍部分样式 */
 #intro {
     padding: 4rem 0;
@@ -341,13 +370,16 @@ body {
 
 /* 导航栏样式 */
 .navbar {
-    background: rgba(14, 22, 39, 0.5);
+    background: rgba(13, 17, 28, 0.95);
     backdrop-filter: blur(10px);
-    padding: 1rem 0;
+    -webkit-backdrop-filter: blur(10px);
+    padding: 12px 20px;
     position: fixed;
     width: 100%;
     top: 0;
     z-index: 1000;
+    transition: all 0.3s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .navbar .container {
@@ -357,35 +389,41 @@ body {
 }
 
 .navbar-brand {
-    color: #3498db;
-    text-decoration: none;
-    font-size: 1.2rem;
+    color: #fff;
+    font-size: 16px;
     font-weight: 500;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-box {
+    width: 24px;
+    height: 24px;
+    background: #3498db;
+    border-radius: 6px;
 }
 
 .wallet-section {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 15px;
 }
 
 .btn-connect {
     background: #3498db;
     color: white;
     border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: background-color 0.2s;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
 }
 
 .btn-connect:hover {
     background: #2980b9;
-}
-
-.btn-connect.connected {
-    background: #27ae60;
 }
 
 .wallet-info {
@@ -394,8 +432,39 @@ body {
 }
 
 .wallet-address {
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+}
+
+/* 移动端样式 */
+@media screen and (max-width: 768px) {
+    .navbar {
+        padding: 10px 15px;
+        background: rgba(13, 17, 28, 0.98);
+    }
+
+    .navbar-brand {
+        font-size: 15px;
+    }
+
+    .logo-box {
+        width: 20px;
+        height: 20px;
+    }
+
+    .btn-connect {
+        padding: 6px 12px;
+        font-size: 13px;
+        border-radius: 6px;
+    }
+
+    .wallet-address {
+        font-size: 13px;
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 }
 
 /* 提示样式 */
@@ -548,5 +617,54 @@ body {
     .form-control {
         font-size: 14px;
         padding: 10px;
+    }
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .benefits-list {
+        gap: 8px;
+    }
+
+    .benefit-item {
+        flex: 0 1 calc(50% - 8px);
+        padding: 8px 12px;
+    }
+
+    .benefit-text {
+        font-size: 13px;
+    }
+}
+
+@media screen and (max-width: 375px) {
+    .benefit-item {
+        flex: 0 1 100%;
+    }
+}
+
+/* 移动端导航栏样式 */
+@media screen and (max-width: 768px) {
+    .navbar {
+        position: fixed;
+        padding: 0.8rem 1rem;
+        transform: translateY(0);
+    }
+
+    /* 调整内容区域的上边距，为固定导航栏留出空间 */
+    body {
+        padding-top: 60px;
+    }
+
+    /* 优化移动端导航栏样式 */
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+
+    .nav-link {
+        padding: 0.5rem 0.8rem;
+    }
+
+    .navbar-nav {
+        margin-top: 0.5rem;
     }
 }

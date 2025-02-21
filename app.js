@@ -353,6 +353,26 @@ async function updateLiveStats() {
 setInterval(updateLiveStats, 30000); // 每30秒更新一次
 updateLiveStats(); // 初始更新
 
+// 处理移动端导航栏滚动隐藏
+let lastScrollTop = 0;
+const navbar = document.querySelector('.navbar');
+
+window.addEventListener('scroll', () => {
+    if (window.innerWidth <= 768) {  // 只在移动端生效
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        
+        if (scrollTop > lastScrollTop) {
+            // 向下滚动，隐藏导航栏
+            navbar.style.transform = 'translateY(-100%)';
+        } else {
+            // 向上滚动，显示导航栏
+            navbar.style.transform = 'translateY(0)';
+        }
+        
+        lastScrollTop = scrollTop;
+    }
+});
+
 // 事件监听
 document.getElementById('connectWallet').addEventListener('click', connectWallet);
 document.getElementById('trxAmount').addEventListener('input', calculateExchange);
