@@ -247,71 +247,82 @@ body {
     color: #fff;
 }
 
-.tokenomics-content {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    background: rgba(14, 22, 39, 0.5);
-    backdrop-filter: blur(10px);
-    border-radius: 10px;
-    padding: 3rem;
+.token-economics {
+    padding: 40px 20px;
+    text-align: center;
 }
 
-.supply-section h3,
-.benefits-section h3 {
-    font-size: 1.2rem;
-    color: rgba(255, 255, 255, 0.6);
-    margin-bottom: 1rem;
-    text-align: left;
+.token-economics h2 {
+    font-size: 32px;
+    margin-bottom: 40px;
+    color: #fff;
 }
 
-.supply-amount {
-    font-size: 2.5rem;
-    font-weight: bold;
-    color: #3498db;
-    text-align: left;
-}
-
-.benefits-section ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    text-align: left;
-}
-
-.benefits-section ul li {
-    color: rgba(255, 255, 255, 0.6);
-    margin-bottom: 1rem;
-    font-size: 1rem;
-}
-
-.benefits-list {
+.token-stats {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.token-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
     gap: 10px;
-    justify-content: center;
+}
+
+.token-stat-label {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.token-stat-value {
+    font-size: 36px;
+    font-weight: 600;
+    color: #3498db;
+}
+
+.token-benefits {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
 .benefit-item {
-    flex: 0 1 calc(50% - 10px);
+    background: rgba(52, 152, 219, 0.1);
+    border-radius: 12px;
+    padding: 15px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 16px;
     display: flex;
     align-items: center;
-    padding: 10px 15px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    margin: 0;
+    gap: 10px;
 }
 
 .benefit-item i {
     color: #3498db;
-    margin-right: 10px;
-    font-size: 16px;
+    font-size: 18px;
 }
 
-.benefit-text {
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 14px;
-    white-space: nowrap;
+@media screen and (max-width: 768px) {
+    .token-economics h2 {
+        font-size: 28px;
+        margin-bottom: 30px;
+    }
+
+    .token-stat-value {
+        font-size: 32px;
+    }
+
+    .token-stat-label {
+        font-size: 16px;
+    }
+
+    .benefit-item {
+        font-size: 14px;
+        padding: 12px;
+    }
 }
 
 /* 首页介绍部分样式 */
