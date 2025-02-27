@@ -1,10 +1,7 @@
 let tronWeb;
 let contract;
-const CONTRACT_ADDRESS = 'TRCb1h2CT82YtJSUnzywERrenEStKtEpce';
-const EXCHANGE_RATE = 20;
-const ADMIN_ADDRESS = 'TSTTzbC8RbqEgLvbCvudKd5rZ6Chg8GN7o'; // 管理员钱包地址，用于接收用户的TRX
-const API_KEY = 'your-secure-api-key-2025'; // 从.env文件中获取API密钥
-const API_URL = 'http://localhost:8080'; // 确保这里的端口与后端一致
+const CONTRACT_ADDRESS = 'TDh764XBtebnEjADfcP6sW8mRWU4Xa7ymE';
+const EXCHANGE_RATE = 20; // 兑换比例: 20 TRX = 1 TRU
 
 // 检查钱包状态
 async function checkWalletStatus() {
@@ -98,18 +95,13 @@ async function connectWallet() {
         alert('请安装 TronLink 钱包');
         return;
     }
-
+    
     try {
-        // 请求连接钱包
         await window.tronLink.request({ method: 'tron_requestAccounts' });
-        // 等待连接完成
-        const connected = await waitForTronWeb();
-        if (!connected) {
-            alert('请确保解锁 TronLink 钱包');
-        }
+        return await waitForTronWeb();
     } catch (error) {
-        console.error('连接钱包失败:', error);
-        alert('连接钱包失败，请重试');
+        console.error('Failed to connect wallet:', error);
+        return false;
     }
 }
 
@@ -120,12 +112,16 @@ async function updateWalletInfo() {
     const walletAddress = window.tronWeb.defaultAddress.base58;
     if (!walletAddress) return;
 
-    // 更新地址显示
-    const addressElem = document.querySelector('.wallet-address');
-    if (addressElem) {
-        const shortAddress = `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`;
-        addressElem.textContent = shortAddress;
-        addressElem.title = walletAddress;
+    try {
+        // 获取TRX余额
+        const balance = await window.tronWeb.trx.getBalance(walletAddress);
+        const trxBalance = window.tronWeb.fromSun(balance);
+
+        // 更新显示
+        document.querySelector('.wallet-address').textContent = 
+            `${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`;
+    } catch (error) {
+        console.error('Failed to update wallet info:', error);
     }
 }
 
@@ -133,87 +129,66 @@ async function updateWalletInfo() {
 async function initContract() {
     try {
         if (!window.tronWeb) {
-            console.error('TronWeb not found');
-            return false;
+            throw new Error('TronWeb not found');
         }
 
-        if (!window.tronWeb.ready) {
-            console.error('TronWeb not ready');
-            return false;
-        }
-
-        // 确保TronWeb已经完全初始化
-        if (!window.tronWeb.defaultAddress.base58) {
-            console.error('No wallet address found');
-            return false;
-        }
-
-        try {
-            contract = await window.tronWeb.contract().at(CONTRACT_ADDRESS);
-            if (!contract) {
-                console.error('Contract initialization failed');
-                return false;
+        // Exchange合约ABI
+        const exchangeABI = [
+            {
+                "inputs": [
+                    {
+                        "name": "_truToken",
+                        "type": "address"
+                    },
+                    {
+                        "name": "_trxReceiver",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "inputs": [],
+                "name": "exchangeTRXForTRU",
+                "outputs": [],
+                "stateMutability": "payable",
+                "type": "function"
             }
+        ];
 
-            // 验证合约是否正确初始化
-            const contractMethods = await contract.methods;
-            if (!contractMethods) {
-                console.error('Contract methods not found');
-                return false;
-            }
-
-            console.log('Contract initialized successfully');
-            console.log('Contract address:', CONTRACT_ADDRESS);
-            console.log('User address:', window.tronWeb.defaultAddress.base58);
-            return true;
-        } catch (error) {
-            console.error('Contract initialization error:', error);
-            return false;
-        }
+        contract = await window.tronWeb.contract(exchangeABI, CONTRACT_ADDRESS);
+        console.log('Contract initialized:', contract);
+        return true;
     } catch (error) {
-        console.error('TronWeb error:', error);
+        console.error('Failed to initialize contract:', error);
         return false;
     }
 }
 
 // 计算兑换数量
 function calculateExchange() {
-    const trxAmount = document.getElementById('trxAmount').value;
-    const truAmount = trxAmount * EXCHANGE_RATE;
-    document.getElementById('truAmount').value = truAmount;
+    const trxInput = document.getElementById('trxAmount');
+    const truOutput = document.getElementById('truAmount');
+    
+    const trxAmount = parseFloat(trxInput.value) || 0;
+    const truAmount = trxAmount / EXCHANGE_RATE; // 20 TRX = 1 TRU
+    
+    truOutput.value = truAmount.toFixed(8);
 }
 
 // 检查余额
 async function checkBalance(amount) {
+    if (!window.tronWeb || !window.tronWeb.ready) return false;
+
     try {
         const balance = await window.tronWeb.trx.getBalance(window.tronWeb.defaultAddress.base58);
-        const balanceInTrx = window.tronWeb.fromSun(balance);
-        console.log('Current balance:', balanceInTrx, 'TRX');
-        return parseFloat(balanceInTrx) >= parseFloat(amount);
+        const trxBalance = window.tronWeb.fromSun(balance);
+        return parseFloat(trxBalance) >= parseFloat(amount);
     } catch (error) {
         console.error('Failed to check balance:', error);
         return false;
     }
-}
-
-// 显示成功弹窗
-function showSuccess(message) {
-    Swal.fire({
-        title: '兑换成功！',
-        text: message,
-        icon: 'success',
-        confirmButtonText: '确定'
-    });
-}
-
-// 显示错误弹窗
-function showError(message) {
-    Swal.fire({
-        title: '出错了',
-        text: message,
-        icon: 'error',
-        confirmButtonText: '确定'
-    });
 }
 
 // 执行兑换
@@ -234,14 +209,13 @@ async function performExchange() {
             throw new Error('未检测到钱包地址');
         }
 
-        // 检查用户地址和管理员地址是否相同
-        if (userAddress.toLowerCase() === ADMIN_ADDRESS.toLowerCase()) {
-            throw new Error('不能使用管理员钱包进行兑换');
-        }
-
         const trxAmount = document.getElementById('trxAmount').value;
         if (!trxAmount || trxAmount <= 0) {
             throw new Error('请输入有效的TRX数量');
+        }
+
+        if (trxAmount < 20) {
+            throw new Error('最少需要20 TRX');
         }
 
         // 检查余额
@@ -255,68 +229,29 @@ async function performExchange() {
             console.log('User address:', userAddress);
             console.log('TRX amount:', trxAmount);
             
-            // 发送TRX到管理员地址
-            const transaction = await window.tronWeb.trx.sendTransaction(
-                ADMIN_ADDRESS,
-                window.tronWeb.toSun(trxAmount),
-                {
-                    shouldPollResponse: true,
-                    callValue: 0
-                }
-            );
+            // 调用Exchange合约的exchangeTRXForTRU函数
+            const transaction = await contract.exchangeTRXForTRU().send({
+                callValue: window.tronWeb.toSun(trxAmount),
+                shouldPollResponse: false  // 改为 false，不等待交易确认
+            });
 
-            if (transaction.result || transaction.txid) {
-                console.log('TRX transaction successful:', transaction);
-                
-                // TRX发送成功后立即弹窗，等弹窗关闭后恢复按钮状态
-                await Swal.fire({
-                    title: '兑换成功！',
-                    icon: 'success',
-                    confirmButtonText: '确定'
-                });
-                
-                // 弹窗关闭后恢复按钮状态
-                exchangeButton.disabled = false;
-                exchangeButton.innerHTML = originalText;
-                
-                // 计算TRU数量
-                const truAmount = trxAmount * EXCHANGE_RATE;
-                
-                // 调用后端API处理TRU转账
-                const response = await fetch(`${API_URL}/exchange`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-api-key': API_KEY
-                    },
-                    body: JSON.stringify({
-                        userAddress: userAddress,
-                        trxAmount: parseFloat(trxAmount),
-                        truAmount: truAmount,
-                        transactionId: transaction.txid || transaction.transaction_id
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('后端API请求失败');
-                }
-
-                const result = await response.json();
-                if (result.success) {
-                    // showSuccess('兑换成功！TRU将很快到达您的钱包');
-                    
-                    // 清空输入框
-                    document.getElementById('trxAmount').value = '';
-                    document.getElementById('truAmount').value = '';
-                    
-                    // 更新钱包信息
-                    updateWalletInfo();
-                } else {
-                    throw new Error(result.message || '兑换失败，请稍后重试');
-                }
-            } else {
-                throw new Error('TRX交易失败');
-            }
+            console.log('Exchange transaction sent:', transaction);
+            
+            // 清空输入框
+            document.getElementById('trxAmount').value = '';
+            document.getElementById('truAmount').value = '';
+            
+            // 显示成功消息
+            await Swal.fire({
+                title: '兑换成功！',
+                text: '请在钱包中查看代币',
+                icon: 'success',
+                confirmButtonText: '确定'
+            });
+            
+            // 更新钱包信息
+            await updateWalletInfo();
+            
         } catch (error) {
             console.error('Exchange error:', error);
             throw new Error(error.message || '兑换过程中发生错误');
@@ -325,60 +260,42 @@ async function performExchange() {
         console.error('Exchange error:', error);
         showError(error.message || '兑换失败，请重试');
     } finally {
-        // exchangeButton.disabled = false;
-        // exchangeButton.innerHTML = originalText;
+        exchangeButton.disabled = false;
+        exchangeButton.innerHTML = originalText;
     }
 }
 
-// 更新实时数据
-async function updateLiveStats() {
-    try {
-        // 这里应该调用后端 API 获取实际数据
-        // 现在使用模拟数据
-        const stats = {
-            circulatingSupply: '8,756,432 TRU',
-            dailyVolume: '1,234,567 TRX',
-            holdersCount: '12,345'
-        };
-
-        document.getElementById('circulatingSupply').textContent = stats.circulatingSupply;
-        document.getElementById('dailyVolume').textContent = stats.dailyVolume;
-        document.getElementById('holdersCount').textContent = stats.holdersCount;
-    } catch (error) {
-        console.error('Failed to update live stats:', error);
-    }
+// 显示成功消息
+function showSuccess(message) {
+    Swal.fire({
+        title: '成功',
+        text: message,
+        icon: 'success',
+        confirmButtonText: '确定'
+    });
 }
 
-// 定期更新实时数据
-setInterval(updateLiveStats, 30000); // 每30秒更新一次
-updateLiveStats(); // 初始更新
+// 显示错误消息
+function showError(message) {
+    Swal.fire({
+        title: '错误',
+        text: message,
+        icon: 'error',
+        confirmButtonText: '确定'
+    });
+}
 
-// 处理移动端导航栏滚动隐藏
-let lastScrollTop = 0;
-const navbar = document.querySelector('.navbar');
-
-window.addEventListener('scroll', () => {
-    if (window.innerWidth <= 768) {  // 只在移动端生效
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        
-        if (scrollTop > lastScrollTop) {
-            // 向下滚动，隐藏导航栏
-            navbar.style.transform = 'translateY(-100%)';
-        } else {
-            // 向上滚动，显示导航栏
-            navbar.style.transform = 'translateY(0)';
-        }
-        
-        lastScrollTop = scrollTop;
-    }
-});
-
-// 事件监听
-document.getElementById('connectWallet').addEventListener('click', connectWallet);
-document.getElementById('trxAmount').addEventListener('input', calculateExchange);
-document.getElementById('exchangeButton').addEventListener('click', performExchange);
-
-// 检查TronLink是否已安装
-window.addEventListener('load', async () => {
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', async () => {
+    // 连接钱包按钮事件
+    document.getElementById('connectWallet')?.addEventListener('click', connectWallet);
+    
+    // 输入框事件监听
+    document.getElementById('trxAmount')?.addEventListener('input', calculateExchange);
+    
+    // 兑换按钮事件
+    document.getElementById('exchangeButton')?.addEventListener('click', performExchange);
+    
+    // 检查钱包状态
     await checkWalletStatus();
 });
